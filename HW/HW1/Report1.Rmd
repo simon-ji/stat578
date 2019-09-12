@@ -19,13 +19,15 @@ Consider the following hypothetical scenario:
 positive (depending on the movie). Assume a U(0, 1) prior on each $p_i$.
 
    * (a) [4 pts] Determine the posterior distribution of $p_1$ and of $p_2$ (separately).
-```{r}
-
-```
+   [Answer] $p_1 \sim Beta(\alpha = 151, \beta = 51)$
+   $p_2 \sim Beta(\alpha = 5, \beta = 2)$
    * (b) [3 pts] Which movie ranks higher according to posterior mean? According to posterior
 median? According to posterior mode? Show your computations. (For median, use R
 function qbeta. For mean and mode, use formulas in BDA3, Table A.1. Do not use
 simulation, as it may not be sufficiently accurate.)
+```{r}
+
+```
 
 
 2. File `randomwikipedia.txt` contains the ID number and number of bytes in length for 20
