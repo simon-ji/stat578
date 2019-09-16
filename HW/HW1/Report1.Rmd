@@ -5,8 +5,8 @@ output:
   pdf_document: default
   html_notebook: default
 ---
-
-1. The film review aggregator website rottentomatoes.com publishes ranked lists of movies
+## Problem 1
+The film review aggregator website rottentomatoes.com publishes ranked lists of movies
 based on the number of positive critical reviews out of a total number counted for each
 movie. See, for example, https://www.rottentomatoes.com/top/bestofrt/?year=2018.
 Because the site uses an "Adjusted Score" a movie with a higher approval percentage
@@ -18,53 +18,203 @@ Consider the following hypothetical scenario:
    Assume that reviews of Movie `i` are independent with a common probability $p_i$ of being
 positive (depending on the movie). Assume a U(0, 1) prior on each $p_i$.
 
-   * (a) [4 pts] Determine the posterior distribution of $p_1$ and of $p_2$ (separately).
-   
-   **[Answer]** $p_1 \sim Beta(\alpha = 151, \beta = 51)$, $p_2 \sim Beta(\alpha = 5, \beta = 2)$
-   
-   * (b) [3 pts] Which movie ranks higher according to posterior mean? According to posterior
+### Problem 1.a [4 pts] 
+Determine the posterior distribution of $p_1$ and of $p_2$ (separately).  
+**[Solution]**  
+$p_1 \sim Beta(\alpha = 151, \beta = 51)$  
+$p_2 \sim Beta(\alpha = 5, \beta = 2)$  
+
+### Problem 1.b [3 pts] 
+Which movie ranks higher according to posterior mean? According to posterior
 median? According to posterior mode? Show your computations. (For median, use R
 function qbeta. For mean and mode, use formulas in BDA3, Table A.1. Do not use
-simulation, as it may not be sufficiently accurate.)
+simulation, as it may not be sufficiently accurate.)  
+**[Solution]**  
 ```{r}
+p1_alpha_post = 151
+p1_beta_post = 51
+p2_alpha_post = 5
+p2_beta_post = 2
+
+p1_post_mean =  p1_alpha_post / (p1_alpha_post + p1_beta_post)
+p2_post_mean =  p2_alpha_post / (p2_alpha_post + p2_beta_post)
+
+p1_post_median = qbeta(0.5, 151, 51)
+p2_post_median = qbeta(0.5, 5, 2)
+
+p1_post_mode =  (p1_alpha_post - 1) / (p1_alpha_post + p1_beta_post - 2)
+p2_post_mode =  (p2_alpha_post - 1) / (p2_alpha_post + p2_beta_post - 2)
+
+cat("P1 Posterior Median:", p1_post_median, ", P2 Posterior Median:", p2_post_median, "\n")
+cat("P1 Posterior Mean:", p1_post_mean, ", P2 Posterior Mean:", p2_post_mean, "\n")
+cat("P1 Posterior Mode:", p1_post_mode, ", P2 Posterior Mode:", p2_post_mode, "\n")
 
 ```
 
+Accorind to the calculations, **Movie 1** rank higer on **posterior median and mean**. Movie 2 rank higher on **posterior mode**.  
 
-2. File `randomwikipedia.txt` contains the ID number and number of bytes in length for 20
+## Problem 2
+File `randomwikipedia.txt` contains the ID number and number of bytes in length for 20
 randomly selected English Wikipedia articles.  
-   * (a)
-      * (i) [2 pts] Draw a histogram of article length, and describe the distribution.  
-[Answer]This is the answer
-      * (ii) [2 pts] Transform article length to the (natural) log scale. Then re-draw the
-histogram and describe the distribution.
-      * (iii) [1 pt] Based on your histograms, explain why the log scale would be better to use
+
+### Problem 2.a
+#### (i)[2 pts] 
+Draw a histogram of article length, and describe the distribution.  
+**[Solution]**  
+```{r}
+wiki_data = read.csv('randomwikipedia.txt', sep="")
+hist(wiki_data$bytes, xlab = "Bytes", main = "Histogram of Article Length")
+```
+
+The distribution is right skewed.  
+
+#### (ii) [2 pts] 
+Transform article length to the (natural) log scale. Then re-draw the histogram and describe the distribution.  
+**[Solution]**  
+```{r}
+log_bytes = log(wiki_data$bytes)
+hist(log_bytes, xlab = "Log(Bytes)", main = "Histogram of Article Length")
+```
+
+The log scale distribution is close to normal distribution but with outliers on high bytes value.  
+
+#### (iii) [1 pt]
+Based on your histograms, explain why the log scale would be better to use
 for the remainder of the analysis. (Read below.)  
-   * (b)[2 pts] Let $y_i$ be length of article i on the log scale (i.e., the natural logarithm of the
+**[Solution]**  
+We see after log scale, the distribution has much less skew and close to normal distribution. This simplified parameters inference by using normal distribution models for later analysis.
+
+### Problem 2.b [2 pts]
+Let $y_i$ be length of article i on the log scale (i.e., the natural logarithm of the
 number of bytes). Compute the sample mean and sample variance of $y_i$,...,$y_{20}$.  
 In the remaining parts, assume the $y_is$ have a normal sampling distribution with
-mean $\mu$ and variance $\sigma^2$.
-   * (c)Assume $\sigma^2$ is known to equal the sample variance. Consider a plat prior for $\mu$. Use it to:
-      * (i) [3 pts] Compute the posterior mean, posterior variance, and posterior precision
-of $\mu$.
-      * (ii) [2 pts] Plot the prior density and the posterior density of $\mu$ together in a single
-plot. Label which is which.
-      * (iii) [2 pts] Compute a 95% central posterior interval for $\mu$.
-   * (d) Now let $\mu$ and $\sigma^2$ have prior: $p(\mu, \sigma^2) \propto (\sigma^2)$. Use it to:
-      * (i) [3 pts] Compute the posterior mean, posterior variance, and posterior precision
-of $\mu$. (If you cannot compute explicitly, use a good computational approximation.)
-      * (ii) [2 pts] Approximate a 95% central posterior interval for $\mu$.
-      * (iii) [2 pts] Approximate a 95% central posterior interval for $\sigma^2$.
-   * (e) Assume the prior of the previous part. Use simulation in R to answer the following,
-based on 1,000,000 draws from the posterior.
-      * (i) [2 pts] Approximate a 95% central posterior predictive interval for the length (in
+mean $\mu$ and variance $\sigma^2$.  
+
+**[Solution]**  
+```{r}
+n = length(log_bytes)
+sample_mean = mean(log_bytes)
+sample_variance = var(log_bytes)
+cat("(log) Sample mean:", sample_mean, ", (log) Sample variance:", sample_variance)
+```
+
+### Problem 2.c
+Assume $\sigma^2$ is known to equal the sample variance. Consider a plat prior for $\mu$. Use it to:  
+
+#### (i) [3 pts] 
+Compute the posterior mean, posterior variance, and posterior precision
+of $\mu$.  
+
+**[Solution]**  
+```{r}
+sigma.2 = sample_variance
+ybar = sample_mean
+mu_mean_post = ybar
+mu_var_post = sigma.2 / n
+mu_pre_post = 1 / mu_var_post
+
+cat("Posterior mean, vairance and precision of mu are:", 
+    mu_mean_post, ",", mu_var_post, ",", mu_pre_post)
+```
+
+#### (ii) [2 pts] 
+Plot the prior density and the posterior density of $\mu$ together in a single
+plot. Label which is which.  
+
+**[Solution]**  
+```{r}
+x_start = 3
+x_end = 14
+curve(dnorm(x,mu_mean_post, sqrt(mu_var_post)), x_start, x_end, n=1000, 
+      xlab=expression(mu), ylab="", main="Posterior Density of Mean")
+curve(dunif(x, x_start, x_end), x_start, x_end, add=TRUE, lty=2)
+legend("topright", legend = c("Prior", "Posterior"), lty = c(2, 1))
+```
+
+#### (iii) [2 pts] 
+Compute a 95% central posterior interval for $\mu$.  
+**[Solution]**  
+```{r}
+intervals = qnorm(c(0.025, 0.975), mu_mean_post, sqrt(mu_var_post))
+cat("95% central posterior interval is: (", intervals[1], ",", intervals[2], ")")
+```
+
+### Problem 2.d
+Now let $\mu$ and $\sigma^2$ have prior: $p(\mu, \sigma^2) \propto (\sigma^2)$. Use it to:  
+   
+#### (i) [3 pts] 
+Compute the posterior mean, posterior variance, and posterior precision
+of $\mu$. (If you cannot compute explicitly, use a good computational approximation.)  
+**[Solution]**  
+```{r}
+set.seed(816)
+simulation_count = 1000000
+sigma.2_post_sim = (n - 1) * sigma.2 / rchisq(simulation_count, n - 1)
+mu_post_sim = rnorm(simulation_count, ybar, sqrt(sigma.2_post_sim / n))
+
+mu_mean_post_sim = mean(mu_post_sim)
+mu_var_post_sim = var(mu_post_sim)
+mu_pre_post_sim = 1 / mu_var_post_sim
+cat("(simulated) Posterior mean, vairance and precision of mu are:", 
+    mu_mean_post_sim, ",", mu_var_post_sim, ",", mu_pre_post_sim)
+```
+
+#### (ii) [2 pts]
+Approximate a 95% central posterior interval for $\mu$.  
+**[Solution]**  
+```{r}
+print(quantile(mu_post_sim, c(0.025,0.975)))
+```
+
+#### (iii) [2 pts] 
+Approximate a 95% central posterior interval for $\sigma^2$.  
+**[Solution]**  
+```{r}
+print(quantile(sigma.2_post_sim, c(0.025,0.975)))
+```
+ 
+### Problem 2.e
+Assume the prior of the previous part. Use simulation in R to answer the following,
+based on 1,000,000 draws from the posterior.  
+
+#### (i) [2 pts] 
+Approximate a 95% central posterior predictive interval for the length (in
 bytes) of a single (new) randomly drawn article. (Note that this is on the original
-scale, not the log scale.)
-      * (ii) [2 pts] Approximate the posterior predictive probability that the length of a single
-(new) randomly drawn article will exceed the maximum article length in the data.
-      * (iii) [2 pts] Approximate the posterior predictive probability that the maximum length
+scale, not the log scale.)  
+
+**[Solution]**  
+```{r}
+#simulation_count2 = 1000000
+#sigma.2_post_sim2 = (n - 1) * sigma.2 / rchisq(simulation_count2, n - 1)
+#mu_post_sim = rnorm(simulation_count, ybar, sqrt(sigma.2_post_sim / n))
+pred_post_sim = rnorm(simulation_count, mu_post_sim, sqrt(sigma.2_post_sim))
+interval = exp(quantile(pred_post_sim, c(0.025, 0.975)))
+cat("95% central posterior predictive interval (in bytes):(", 
+    round(interval[[1]]),",", round(interval[[2]]), ")")
+```
+
+#### (ii) [2 pts] 
+Approximate the posterior predictive probability that the length of a single
+(new) randomly drawn article will exceed the maximum article length in the data.  
+**[Solution]**  
+```{r}
+mean(pred_post_sim > log(max(wiki_data$bytes)))
+```
+
+#### (iii) [2 pts] 
+Approximate the posterior predictive probability that the maximum length
 of 20 (new) randomly drawn articles will exceed the maximum article length in the
 data. (Be careful! The 20 randomly drawn articles have the same value for $\mu$ and
-for $\sigma^2$.)
+for $\sigma^2$.)  
+**[Solution ]**  
+```{r}
+max_byte_log = log(max(wiki_data$bytes))
+
+compare = function(i) {
+   max(rnorm(20, mu_post_sim[i], sqrt(sigma.2_post_sim[i]))) > max_byte_log
+}
+mean(sapply(1:simulation_count, compare))
+```
+
 
 
