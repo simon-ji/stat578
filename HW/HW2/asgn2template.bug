@@ -1,11 +1,11 @@
 model {
   for (j in 1:) {
-    psihat[j] ~ 
-    psi[j] ~ 
+    psihat[j] ~ dnorm(psi[j], 1 / (sigma[j] ^ 2))
+    psi[j] ~ dnorm(psi0, 1 / (sigma0 ^ 2))
   }
 
-  psi0 ~ 
-  sigma0 ~ 
+  psi0 ~ dnorm(0, 1 / (1000 ^ 2))
+  sigma0 ~ dunif(0,1000)
 
-  sigmasq0 <- 
+  sigmasq0 <- sigma0 ^ 2
 }
