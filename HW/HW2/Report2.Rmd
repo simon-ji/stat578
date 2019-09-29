@@ -40,8 +40,8 @@ hist(theta_post_2, freq=FALSE, xlim=c(0,1))
 ## Solution for Problem 2
 ### (a)
 The improper prior densities of hyperpriors are:
-$$p(\psi_0) \propto  1 , -\infty < \psi_0 < \infty$$
-$$p(\sigma_0) \propto  1 , \sigma_0 > 0$$
+$$\psi_0 \sim flat\text{  }on\text{  }(-\infty, \infty)$$
+$$\sigma_0 \sim flat\text{  }on\text{  }(0, \infty)$$
 
 ### (b)
 See Figure.1 
