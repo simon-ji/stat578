@@ -49,4 +49,9 @@ See Figure.1
 ![DAG of the Model](dag.png)
 
 ### (c)
+```{r}
+library(rjags)
+
+model = jags.model("asgn2template.bug")
+```
 
