@@ -7,5 +7,7 @@ model {
   psi0 ~ dnorm(0, 1 / (1000 ^ 2))
   sigma0 ~ dunif(0, 1000)
 
-  sigmasq0 <- sigma0 ^ 2
+  psihat_new ~ dnorm(psi_new, 1 / (sigma_new^2))
+  psi_new ~ dnorm(psi0, 1 / (sigma0 ^ 2))
+  psihat_new_ind <- psihat_new >= 2 * psi_new
 }
