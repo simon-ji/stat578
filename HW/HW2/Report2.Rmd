@@ -44,25 +44,28 @@ $$p(\psi_0) \propto 1 \text{ }for\text{ } \psi_0 \in (-\infty, \infty)$$
 $$p(\sigma_0) \propto 1 \text{ }for\text{ }\sigma_0\text{ } \in (0, \infty)$$
 
 ### (b)
-See Figure 1 
 
-![DAG of the Model 1](dag.png)
+```{r echo=FALSE, out.width = "300px"}
+knitr::include_graphics("./dag.png")
+```
 
 ### (c)
+JAGS Model Definition:
+```{r eval=FALSE, echo=TRUE}
+model {
+  for (j in 1:length(psihat)) {
+    psihat[j] ~ dnorm(psi[j], 1 / (sigma[j] ^ 2))
+    psi[j] ~ dnorm(psi0, 1 / (sigma0 ^ 2))
+  }
+
+  psi0 ~ dnorm(0, 1 / (1000 ^ 2))
+  sigma0 ~ dunif(0, 1000)
+
+  sigmasq0 <- sigma0 ^ 2
+}
+```
 
 ```{r message=FALSE, warning=FALSE}
-#   model {
-#   for (j in 1:length(psihat)) {
-#     psihat[j] ~ dnorm(psi[j], 1 / (sigma[j] ^ 2))
-#     psi[j] ~ dnorm(psi0, 1 / (sigma0 ^ 2))
-#   }
-# 
-#   psi0 ~ dnorm(0, 1 / (1000 ^ 2))
-#   sigma0 ~ dunif(0, 1000)
-# 
-#   sigmasq0 <- sigma0 ^ 2
-# }
-
 library(rjags)
 
 df = read.table("data.txt", header=TRUE)[, 2:3]
@@ -116,26 +119,29 @@ sigmasq0_95 = quantile(sigmasq0, c(0.025, 0.975))
 
 ### (e)
 (i)
-See Figure 2
-
-![DAG of the Model 2](dag_2.png)
+```{r echo=FALSE, out.width = "300px"}
+knitr::include_graphics("./dag_2.png")
+```
 
 (ii)
-```{r}
-# model {
-#   for (j in 1:length(psihat)) {
-#     psihat[j] ~ dnorm(psi[j], 1 / (sigma[j] ^ 2))
-#     psi[j] ~ dnorm(psi0, 1 / (sigma0 ^ 2))
-#   }
-# 
-#   psi0 ~ dnorm(0, 1 / (1000 ^ 2))
-#   sigma0 ~ dunif(0, 1000)
-# 
-#   psihat_new ~ dnorm(psi_new, 1 / (sigma_new^2))
-#   psi_new ~ dnorm(psi0, 1 / (sigma0 ^ 2))
-#   psihat_new_ind <- psihat_new >= 2 * psi_new
-# }
+JAGS Model Definition:
+```{r eval=FALSE, echo=TRUE}
+model {
+  for (j in 1:length(psihat)) {
+    psihat[j] ~ dnorm(psi[j], 1 / (sigma[j] ^ 2))
+    psi[j] ~ dnorm(psi0, 1 / (sigma0 ^ 2))
+  }
 
+  psi0 ~ dnorm(0, 1 / (1000 ^ 2))
+  sigma0 ~ dunif(0, 1000)
+
+  psihat_new ~ dnorm(psi_new, 1 / (sigma_new^2))
+  psi_new ~ dnorm(psi0, 1 / (sigma0 ^ 2))
+  psihat_new_ind <- psihat_new >= 2 * psi_new
+}
+```
+
+```{r}
 model_new = jags.model("asgn2template_new.bug", c(as.list(df), sigma_new = 0.25))
 update(model_new, 10000)
 x_new = coda.samples(model_new, c("psihat_new","psihat_new_ind"), n.iter=10000)
