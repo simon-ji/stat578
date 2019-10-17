@@ -7,7 +7,7 @@ output:
 ## Solution for Problem 1
 ### (a)
 ```{r}
-
+source("FlintGibbs.R")
 ```
 
 ### (b)
