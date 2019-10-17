@@ -1,0 +1,48 @@
+---
+title: "STAT 578 - Advanced Bayesian Modeling - Fall 2019  Assignment 3"
+author: "Xiaoming Ji"
+output:
+  pdf_document: default
+---
+## Solution for Problem 1
+### (a)
+```{r}
+
+```
+
+### (b)
+```{r}
+
+```
+
+#### (i)
+#### (ii)
+```{r}
+
+```
+
+### (c)
+```{r}
+
+```
+
+## Solution for Problem 1
+### (a)
+#### (i)
+#### (ii)
+#### (iii)
+#### (iv)
+#### (v)
+#### (vi)
+```{r}
+
+```
+
+### (b)
+#### (i)
+#### (ii)
+#### (iii)
+#### (iv)
+#### (v)
+#### (vi)
+#### (vii)
