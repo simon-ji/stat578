@@ -1,4 +1,5 @@
 ### Metropolis sampler for analysis of Flint data
+set.seed(816)
 
 n <- 271
 ybar <- 1.40
@@ -35,7 +36,7 @@ mu.sim <- numeric(n.sim)
 sigma.2.sim <- numeric(n.sim)
 accept.prob <- numeric(n.sim-1)
 
-# rho <- 0.01
+#rho <- 0.031
 
 mu.sim[1] <- 1.4         # starting value
 sigma.2.sim[1] <- 1.7    # starting value
@@ -56,6 +57,7 @@ for(t in 2:n.sim){
 }
 
 
-# mean(accept.prob)
+#print(abs(0.35 - mean(accept.prob)))
+print(mean(accept.prob))
 
 

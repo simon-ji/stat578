@@ -2,29 +2,36 @@
 title: "STAT 578 - Advanced Bayesian Modeling - Fall 2019  Assignment 3"
 author: "Xiaoming Ji"
 output:
+  word_document: default
   pdf_document: default
 ---
 ## Solution for Problem 1
 ### (a)
 ```{r}
 source("FlintGibbs.R")
+acf(mu.sim)
+acf(sigma.2.sim)
 ```
 
 ### (b)
 ```{r}
-
+soure("FlintMetropolis.R")
 ```
-
 #### (i)
+```{r}
+rho <- 0.03
+source("FlintMetropolis.R")
+```
+`r rho` of $\rho$ gives acceptance rate of about 0.35.
+
 #### (ii)
 ```{r}
-
+acf(mu.sim)
+acf(sigma.2.sim)
 ```
 
 ### (c)
-```{r}
-
-```
+The autocorrelation plot for Gibbs sampler decays much faster than Metropolis sampler's. Thus, Gibbs sampler exhibited faster mixing.
 
 ## Solution for Problem 1
 ### (a)
