@@ -2,8 +2,8 @@
 title: "STAT 578 - Advanced Bayesian Modeling - Fall 2019  Assignment 3"
 author: "Xiaoming Ji"
 output:
-  word_document: default
   pdf_document: default
+  word_document: default
 ---
 ## Solution for Problem 1
 ### (a)
@@ -14,15 +14,12 @@ acf(sigma.2.sim)
 ```
 
 ### (b)
-```{r}
-soure("FlintMetropolis.R")
-```
 #### (i)
 ```{r}
 rho <- 0.03
 source("FlintMetropolis.R")
 ```
-`r rho` of $\rho$ gives acceptance rate of about 0.35.
+$\rho$ takes `r rho` will give acceptance rate of about 0.35.
 
 #### (ii)
 ```{r}
@@ -35,7 +32,11 @@ The autocorrelation plot for Gibbs sampler decays much faster than Metropolis sa
 
 ## Solution for Problem 1
 ### (a)
+```{r}
+polls2016_df <- read.table("polls2016.txt", header=TRUE, quote="\"")
+```
 #### (i)
+
 #### (ii)
 #### (iii)
 #### (iv)
