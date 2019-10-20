@@ -109,7 +109,28 @@ poll_model_new <- jags.model("polls20161_new.bug", polls2016_df, initial_vals_ne
 ```
 
 #### (iii)
+```{r}
+update(poll_model_new, 2500)
+x_new <- coda.samples(poll_model_new, c("mu","tau"), n.iter = 5000)
+```
+
 #### (iv)
+```{r}
+plot(x_new, smooth=FALSE, density = FALSE)
+plot(x_new, smooth=FALSE, trace = FALSE)
+```
+
 #### (v)
+```{r}
+gelman.diag(x_new, autoburnin=FALSE)
+```
+
 #### (vi)
+```{r}
+mu_chain_1_new  = x_new[[1]][,1]
+tau_chain_1_new = x_new[[1]][,2]
+acf(mu_chain_1_new, lag.max = 100)
+acf(tau_chain_1_new, lag.max = 100)
+```
+
 #### (vii)
