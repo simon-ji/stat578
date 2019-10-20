@@ -33,22 +33,81 @@ The autocorrelation plot for Gibbs sampler decays much faster than Metropolis sa
 ## Solution for Problem 1
 ### (a)
 ```{r}
-polls2016_df <- read.table("polls2016.txt", header=TRUE, quote="\"")
+library(rjags)
+polls2016_df <- read.table("polls2016.txt", header=TRUE)
+polls2016_df$sigma <- polls2016_df$ME/2
+polls2016_df <- subset(polls2016_df, select = -c(poll, ME) )
 ```
 #### (i)
+```{r}
+initial_vals <- list(list(mu = 100, tau = 100),
+                     list(mu = 100, tau = 0.01),
+                     list(mu = -100, tau = 100),
+                     list(mu = -100, tau = 0.01))
 
+poll_model <- jags.model("polls20161.bug", polls2016_df, initial_vals, n.chains = 4)
+```
 #### (ii)
+```{r}
+update(poll_model, 2500)
+x <- coda.samples(poll_model, c("mu","tau"), n.iter = 5000)
+```
+
 #### (iii)
+```{r}
+plot(x, smooth=FALSE, density = FALSE)
+plot(x, smooth=FALSE, trace = FALSE)
+```
+The trace plot shows 4 chains for mu and tau span the similar range and we can't observe obvious convergence problem.
+
 #### (iv)
+```{r}
+gelman.diag(x, autoburnin=FALSE)
+```
+Gelman-Rubin statistics (Potential scale reduction factor) for mu and tau are close to 1 with upper confidence limits close to 1, thus there don't appear to have any convergence problem.
+
 #### (v)
+```{r}
+mu_chain_1  = x[[1]][,1]
+tau_chain_1 = x[[1]][,2]
+acf(mu_chain_1)
+acf(tau_chain_1, lag.max = 100)
+```
+
+We see autocorrelation (of Chain 1) goes zero for mu by lag around 15 and for tau by lag around 80. Thus mixing of mu is faster than tau's.
+
 #### (vi)
 ```{r}
-
+effectiveSize(x)
 ```
+
+The effective sample size for mu and tau is less than 2000, thus our sample size of 5000 is adequate.
 
 ### (b)
 #### (i)
+```{r eval=FALSE}
+model {
+  for (j in 1:length(y)) {
+    y[j] ~ dnorm(theta[j], 1/sigma[j]^2)
+    theta[j] ~ dnorm(mu, 1/tau^2)
+  }
+
+  mu ~ dunif(-1000,1000)
+  logtau ~ dunif(-100, 100)
+  tau <- exp(logtau)
+}
+```
+
 #### (ii)
+```{r}
+initial_vals_new <- list(list(mu = 100, logtau = 100),
+                     list(mu = 100, logtau = 0.01),
+                     list(mu = -100, logtau = 100),
+                     list(mu = -100, logtau = 0.01))
+
+poll_model_new <- jags.model("polls20161_new.bug", polls2016_df, initial_vals_new, n.chains = 4)
+```
+
 #### (iii)
 #### (iv)
 #### (v)
