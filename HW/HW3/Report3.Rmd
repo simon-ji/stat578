@@ -3,7 +3,6 @@ title: "STAT 578 - Advanced Bayesian Modeling - Fall 2019  Assignment 3"
 author: "Xiaoming Ji"
 output:
   pdf_document: default
-  word_document: default
 ---
 ## Solution for Problem 1
 ### (a)
@@ -40,10 +39,14 @@ polls2016_df <- subset(polls2016_df, select = -c(poll, ME) )
 ```
 #### (i)
 ```{r}
-initial_vals <- list(list(mu = 100, tau = 100),
-                     list(mu = 100, tau = 0.01),
-                     list(mu = -100, tau = 100),
-                     list(mu = -100, tau = 0.01))
+initial_vals <- list(list(mu = 100, tau = 100, 
+                          .RNG.name="base::Wichmann-Hill",.RNG.seed=123),
+                     list(mu = 100, tau = 0.01, 
+                          .RNG.name="base::Wichmann-Hill",.RNG.seed=123),
+                     list(mu = -100, tau = 100, 
+                          .RNG.name="base::Wichmann-Hill",.RNG.seed=123),
+                     list(mu = -100, tau = 0.01, 
+                          .RNG.name="base::Wichmann-Hill",.RNG.seed=123))
 
 poll_model <- jags.model("polls20161.bug", polls2016_df, initial_vals, n.chains = 4)
 ```
@@ -58,7 +61,7 @@ x <- coda.samples(poll_model, c("mu","tau"), n.iter = 5000)
 plot(x, smooth=FALSE, density = FALSE)
 plot(x, smooth=FALSE, trace = FALSE)
 ```
-The trace plot shows 4 chains for mu and tau span the similar range and we can't observe obvious convergence problem.
+The trace plot shows 4 chains for mu and tau span the similar region and we can't observe obvious convergence problem.
 
 #### (iv)
 ```{r}
@@ -74,14 +77,14 @@ acf(mu_chain_1)
 acf(tau_chain_1, lag.max = 100)
 ```
 
-We see autocorrelation (of Chain 1) goes zero for mu by lag around 15 and for tau by lag around 80. Thus mixing of mu is faster than tau's.
+We see autocorrelation (of Chain 1) goes zero for mu by lag around 30 and for tau by lag around 70. Thus mixing of mu is faster than tau's.
 
 #### (vi)
 ```{r}
 effectiveSize(x)
 ```
 
-The effective sample size for mu and tau is less than 2000, thus our sample size of 5000 is adequate.
+The effective sample size for mu and tau is less than 2500, thus our sample size of 5000 is adequate.
 
 ### (b)
 #### (i)
@@ -100,10 +103,14 @@ model {
 
 #### (ii)
 ```{r}
-initial_vals_new <- list(list(mu = 100, logtau = 100),
-                     list(mu = 100, logtau = 0.01),
-                     list(mu = -100, logtau = 100),
-                     list(mu = -100, logtau = 0.01))
+initial_vals_new <- list(list(mu = 100, logtau = log(100), 
+                              .RNG.name="base::Wichmann-Hill",.RNG.seed=123),
+                     list(mu = 100, logtau = log(0.01), 
+                          .RNG.name="base::Wichmann-Hill",.RNG.seed=123),
+                     list(mu = -100, logtau = log(100), 
+                          .RNG.name="base::Wichmann-Hill",.RNG.seed=123),
+                     list(mu = -100, logtau = log(0.01), 
+                          .RNG.name="base::Wichmann-Hill",.RNG.seed=123))
 
 poll_model_new <- jags.model("polls20161_new.bug", polls2016_df, initial_vals_new, n.chains = 4)
 ```
@@ -120,17 +127,26 @@ plot(x_new, smooth=FALSE, density = FALSE)
 plot(x_new, smooth=FALSE, trace = FALSE)
 ```
 
+The trace plots for mu and tau clearly show that the values range covered by 4 chains are quite different, thus this model *don't converge* on mu and tau based on these plots.
+
 #### (v)
 ```{r}
 gelman.diag(x_new, autoburnin=FALSE)
 ```
 
+Gelman-Rubin statistics (Potential scale reduction factor) for mu and tau are all greater than 1.1, thus this model *don't converge* based on the Gelman-Rubin statistics.
+
 #### (vi)
 ```{r}
 mu_chain_1_new  = x_new[[1]][,1]
 tau_chain_1_new = x_new[[1]][,2]
-acf(mu_chain_1_new, lag.max = 100)
-acf(tau_chain_1_new, lag.max = 100)
+acf(mu_chain_1_new, lag.max = 1000)
+acf(tau_chain_1_new, lag.max = 1000)
 ```
 
+autocorrelation (of Chain 1) goes zero for mu by lag around 500 and for tau by lag around 100. Thus mixing of mu is slower than tau's.
+
 #### (vii)
+
+The fundamental problem here is: the chosen of improper flat prior for logtau (logtau ~ U(-100, 100)) gives an improper posterior. When we choose the prior distribution, we should always check whether this prior can give us a proper posterior even the JAGS can run without any error. In our case, the simulation doesn't converge and gives any meaningful results.
+
