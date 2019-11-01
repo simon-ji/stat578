@@ -1,0 +1,9 @@
+model {
+  for (i in 1:length(y)) {
+  y[i] ~ dnorm(beta1 + beta2*A_CENTERED[i], sigmasqinv)
+  }
+  beta1 ~ dnorm(0, 1e-06)
+  beta2 ~ dnorm(0, 1e-06)
+  sigmasqinv ~ dgamma(0.001, 0.001)
+  sigmasq <- 1/sigmasqinv
+}

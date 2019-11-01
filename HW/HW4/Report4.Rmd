@@ -19,13 +19,83 @@ with(moores_df, plot(log(Transistors) ~ Year))
 ```
 
 ## Solution for Problem (b)
-
-```{r}
-moores_model = lm(log(Transistors) ~ Year, data = moores_df)
-summary(moores_model)
+### (i)
+```{r eval=FALSE, include=TRUE}
+model {
+  for (i in 1:length(y)) {
+  y[i] ~ dnorm(beta1 + beta2*A_CENTERED[i], sigmasqinv)
+  }
+  beta1 ~ dnorm(0, 1e-06)
+  beta2 ~ dnorm(0, 1e-06)
+  sigmasqinv ~ dgamma(0.001, 0.001)
+  sigmasq <- 1/sigmasqinv
+}
 ```
 
-We built a classical linear regression model using `Year` (for A) as explanatory variable and `log(Transistors)` (for logT) as response variable. The summary shows that this model acheived good R-squared value (> 0.95), thus we can say logT is roughly follow a simple linear regression on A. The coefficient of A is `r coef(moores_model)[['Year']]`
+```{r}
+df <- list(y = log(moores_df$Transistors),
+           A_CENTERED = moores_df$Year - mean(moores_df$Year))
+
+lm_model = lm(y ~ A_CENTERED, data=df)
+summary(lm_model)
+```
+
+- $\beta$ estimates are about 0.3 to 18, we choose to set initial $\beta$ values at $\pm200$
+- Regression error variance $\sigma^2$ estimate is about $(0.94^2) \approx 0.9$, we choose to set initial $\sigma^2$ values of 0.01 and 100
+
+```{r include=FALSE}
+library(rjags)
+
+initial_vals <- list(list(beta1 = 200, beta2 = 200, sigmasqinv = 100),
+                     list(beta1 = 200, beta2 = -200, sigmasqinv = 100),
+                     list(beta1 = -200, beta2 = 200, sigmasqinv = 0.01),
+                     list(beta1 = -200, beta2 = -200, sigmasqinv = 0.01))
+
+moores_model <- jags.model("moores.bug", df, initial_vals, n.chains = 4)
+update(moores_model, 1000)
+coef_sample <- coda.samples(moores_model, c("beta1","beta2","sigmasq"), n.iter=2000)
+```
+```{r}
+gelman.diag(coef_sample, autoburnin=FALSE)
+```
+Gelman-Rubin statistic for $\beta1$, $\beta2$ and $\sigma^2$ are all 1, thus we can declare convergence of them.
+
+
+### (ii)
+```{r}
+summary(coef_sample)
+```
+
+### (iii)
+```{r}
+beta2_sample = as.matrix(coef_sample)[,"beta2"]
+```
+Mean of slope, 
+```{r}
+mean(beta2_sample)
+```
+
+95% posterior credible interval of slope,
+```{r}
+quantile(beta2_sample, c(0.025, 0.975)) 
+```
+
+The interval contains value (0.3465736) determined in part (a).
+
+### (iv)
+```{r}
+beta1_sample = as.matrix(coef_sample)[,"beta1"]
+```
+Mean of intercept, 
+```{r}
+mean(beta1_sample)
+```
+
+95% posterior credible interval of intercept,
+```{r}
+quantile(beta1_sample, c(0.025, 0.975)) 
+```
+
 
 ## Solution for Problem (c)
 ## Solution for Problem (d)
