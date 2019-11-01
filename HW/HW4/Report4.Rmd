@@ -1,0 +1,31 @@
+---
+title: "STAT 578 - Advanced Bayesian Modeling - Fall 2019  Assignment 4"
+author: "Xiaoming Ji"
+output:
+  pdf_document: default
+---
+## Solution for Problem (a)
+### (i)
+According to the formular for Moore's law and take log on T, we get:
+
+$log(T) \approx log(C * 2 ^{A/2}) \rightarrow log(T) \approx log(C) + 0.3465736 * A$
+
+This is the form of linear regression that make logT as response variable and A as explanatory variable. `log(C)` is the intercept and coefficient of A is 0.3465736. Thus we can say logT is roughly follow a simple linear regression on A.
+
+### (ii)
+```{r}
+moores_df = read.csv("mooreslawdata.csv", header=TRUE)
+with(moores_df, plot(log(Transistors) ~ Year))
+```
+
+## Solution for Problem (b)
+
+```{r}
+moores_model = lm(log(Transistors) ~ Year, data = moores_df)
+summary(moores_model)
+```
+
+We built a classical linear regression model using `Year` (for A) as explanatory variable and `log(Transistors)` (for logT) as response variable. The summary shows that this model acheived good R-squared value (> 0.95), thus we can say logT is roughly follow a simple linear regression on A. The coefficient of A is `r coef(moores_model)[['Year']]`
+
+## Solution for Problem (c)
+## Solution for Problem (d)
