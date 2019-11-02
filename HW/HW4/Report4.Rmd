@@ -20,11 +20,26 @@ with(moores_df, plot(log(Transistors) ~ Year))
 
 ## Solution for Problem (b)
 ### (i)
+We first use classical linear model to estimate the parameters.
+
+```{r}
+df_lm <- list(y = log(moores_df$Transistors),
+           x_centered = moores_df$Year - mean(moores_df$Year))
+
+model_lm = lm(y ~ x_centered, data=df_lm)
+summary(model_lm)
+```
+
+- $\beta$ estimates are about 0.3 to 18, we choose to set initial $\beta$ values at $\pm200$
+- Regression error variance $\sigma^2$ estimate is about $(0.94^2) \approx 0.9$, we choose to set initial $\sigma^2$ values of 0.01 and 100
+
 ```{r eval=FALSE, include=TRUE}
 model {
+  x_bar <- mean(x)
   for (i in 1:length(y)) {
-  y[i] ~ dnorm(beta1 + beta2*A_CENTERED[i], sigmasqinv)
+    y[i] ~ dnorm(beta1 + beta2* (x[i] - x_bar), sigmasqinv)
   }
+  
   beta1 ~ dnorm(0, 1e-06)
   beta2 ~ dnorm(0, 1e-06)
   sigmasqinv ~ dgamma(0.001, 0.001)
@@ -32,26 +47,18 @@ model {
 }
 ```
 
-```{r}
-df <- list(y = log(moores_df$Transistors),
-           A_CENTERED = moores_df$Year - mean(moores_df$Year))
-
-lm_model = lm(y ~ A_CENTERED, data=df)
-summary(lm_model)
-```
-
-- $\beta$ estimates are about 0.3 to 18, we choose to set initial $\beta$ values at $\pm200$
-- Regression error variance $\sigma^2$ estimate is about $(0.94^2) \approx 0.9$, we choose to set initial $\sigma^2$ values of 0.01 and 100
-
-```{r include=FALSE}
+```{r  message=FALSE, results='hide'}
 library(rjags)
+
+df_jags <- list(y = log(moores_df$Transistors),
+                x = moores_df$Year)
 
 initial_vals <- list(list(beta1 = 200, beta2 = 200, sigmasqinv = 100),
                      list(beta1 = 200, beta2 = -200, sigmasqinv = 100),
                      list(beta1 = -200, beta2 = 200, sigmasqinv = 0.01),
                      list(beta1 = -200, beta2 = -200, sigmasqinv = 0.01))
 
-moores_model <- jags.model("moores.bug", df, initial_vals, n.chains = 4)
+moores_model <- jags.model("moores.bug", df_jags, initial_vals, n.chains = 4)
 update(moores_model, 1000)
 coef_sample <- coda.samples(moores_model, c("beta1","beta2","sigmasq"), n.iter=2000)
 ```
@@ -98,4 +105,78 @@ quantile(beta1_sample, c(0.025, 0.975))
 
 
 ## Solution for Problem (c)
+### (i)
+
+```{r eval=FALSE, include=TRUE}
+model {
+  x_bar <- mean(x)
+  for (i in 1:length(y)) {
+    y[i] ~ dnorm(beta1 + beta2* (x[i] - x_bar), sigmasqinv)
+  }
+  beta1 ~ dnorm(0, 1e-06)
+  beta2 ~ dnorm(0, 1e-06)
+  sigmasqinv ~ dgamma(0.001, 0.001)
+  y_predict ~ dnorm(beta1 + beta2*(year_predict - x_bar), sigmasqinv)
+  year_start <- x_bar - (beta1 / beta2)
+}
+```
+
+```{r  message=FALSE, results='hide'}
+predict_model <- jags.model("moores_predict.bug", 
+                            c(as.list(df_jags), year_predict = 2020), 
+                            initial_vals, n.chains = 4)
+update(predict_model, 1000)
+predict_sample <- coda.samples(predict_model, c("y_predict", "year_start"), n.iter=2000)
+```
+```{r}
+gelman.diag(predict_sample, autoburnin=FALSE)
+```
+
+Gelman-Rubin statistic for the prediction is 1, thus we can declare convergence of them.
+
+### (ii)
+```{r}
+summary(predict_sample)
+```
+
+### (iii)
+95% posterior predictive interval for the transistor count, in billions,
+```{r}
+exp(quantile(as.matrix(predict_sample)[,"y_predict"], c(0.025, 0.975))) / (10^9)
+```
+
+### (iv)
+
+To explain, we can assume the year when transistor is in invented is the year for transistor count equal to 1. This means given our model,
+
+$log(T) = \beta1 + \beta2 * (A_i - \bar{A})$
+
+We can set T = 1 to derive $A_i$ as the year when transistor is invented. Therefore, we have,
+
+$A_i = \bar{A} - \beta1 / \beta2$
+
+Using the classical linear model, we can estimate this year as,
+
+```{r}
+round(mean(moores_df$Year) - coef(model_lm)[[1]]/coef(model_lm)[[2]])
+```
+
+The 95% posterior interval for this quantity.
+```{r}
+round(quantile(as.matrix(predict_sample)[,"year_start"], c(0.025, 0.975)))
+```
+
+Note: According to [Wikipedia](http://en.wikipedia.org/wiki/Transistor), the first working device to be built was a point-contact transistor invented in *1947* by American physicists John Bardeen, Walter Brattain, and William Shockley at Bell Labs. Our estimates is very close.
+
 ## Solution for Problem (d)
+### (i)
+
+### (ii)
+
+### (iii)
+
+### (iv)
+
+### (v)
+
+### (vi)

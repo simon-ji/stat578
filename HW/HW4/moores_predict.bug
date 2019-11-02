@@ -3,9 +3,9 @@ model {
   for (i in 1:length(y)) {
     y[i] ~ dnorm(beta1 + beta2* (x[i] - x_bar), sigmasqinv)
   }
-  
   beta1 ~ dnorm(0, 1e-06)
   beta2 ~ dnorm(0, 1e-06)
   sigmasqinv ~ dgamma(0.001, 0.001)
-  sigmasq <- 1/sigmasqinv
+  y_predict ~ dnorm(beta1 + beta2*(year_predict - x_bar), sigmasqinv)
+  year_start <- x_bar - (beta1 / beta2)
 }
