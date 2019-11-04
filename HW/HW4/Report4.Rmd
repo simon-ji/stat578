@@ -6,7 +6,7 @@ output:
 ---
 ## Solution for Problem (a)
 ### (i)
-According to the formular for Moore's law and take log on T, we get:
+According to the formula for Moore's law and take log on T, we get:
 
 $log(T) \approx log(C * 2 ^{A/2}) \rightarrow log(T) \approx log(C) + 0.3465736 * A$
 
@@ -170,13 +170,58 @@ Note: According to [Wikipedia](http://en.wikipedia.org/wiki/Transistor), the fir
 
 ## Solution for Problem (d)
 ### (i)
+```{r}
+X <- model.matrix(model_lm)
+Nsim <- length(beta1_sample)
+error_sim <- matrix(NA, Nsim, nrow(X))
+post_beta <- as.matrix(coef_sample)[, c("beta1", "beta2")]
+post_simgasq <- as.matrix(coef_sample)[, c("sigmasq")]
+
+for(s in 1:Nsim) {
+  error_sim[s,] <- df_jags$y - X %*% cbind(post_beta[s,])
+}
+```
 
 ### (ii)
+```{r}
+error_rep <- matrix(NA, Nsim, nrow(X))
+
+for(s in 1:Nsim) {
+  error_rep[s,] <- rnorm(nrow(X), 0, sqrt(post_simgasq[s]))
+}
+```
 
 ### (iii)
+```{r}
+error_sim_std <- matrix(NA, Nsim, nrow(X))
+error_rep_std <- matrix(NA, Nsim, nrow(X))
+
+for(s in 1:Nsim) {
+  error_sim_std[s,] = error_sim[s,] / sqrt(post_simgasq[s])
+  error_rep_std[s,] = error_rep[s,] / sqrt(post_simgasq[s])
+}
+  
+T <- apply(abs(error_sim_std), 1, max)
+T_Rep <- apply(abs(error_rep_std), 1, max)
+```
 
 ### (iv)
+```{r}
+plot(T_Rep ~ T, pch=".", cex=2)
+abline(a=0,b=1)
+```
 
 ### (v)
+```{r}
+mean(T_Rep >= T)
+```
+
+p-value is 0 and this is the strong evidence for an outlier.
 
 ### (vi)
+The most extreme outlier is,
+```{r}
+moores_df[unique(apply(abs(error_sim_std), 1, which.max)),]
+```
+
+which is "ARM 9TDMI" produced in 1999 that only has `111,000` transistors. In this time period, other processors have tens of millions of transistors.
