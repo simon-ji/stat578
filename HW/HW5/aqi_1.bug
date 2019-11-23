@@ -1,0 +1,18 @@
+data {
+    dim_y <- dim(AQI)
+    day_cent <- day - mean(day)
+}
+model {
+    for (j in 1:dim_y[1]) {
+        for (i in 1:dim_y[2]) {
+            AQI[j,i] ~ dnorm(beta[1,j] + beta[2,j] * day_cent[i], sigma_sq_y_inv)
+        }
+        beta[1:2,j] ~ dmnorm(mu_beta, sigma_beta_inv)
+    }
+    mu_beta ~ dmnorm(mu_beta_0, sigma_mu_beta_inv)
+    sigma_beta_inv ~ dwish(2 * sigma_0, 2)
+    sigma_sq_y_inv ~ dgamma(0.0001, 0.0001)
+    sigma_beta <- inverse(sigma_beta_inv)
+    rho <- sigma_beta[1,2] / sqrt(sigma_beta[1,1] * sigma_beta[2,2])
+    sigma_sq_y <- 1 / sigma_sq_y_inv
+}
