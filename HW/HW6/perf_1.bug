@@ -1,0 +1,12 @@
+model {
+    for (i in 1:length(FGM)) {
+        FGM[i] ~ dbin(prob[i], FGA[i])
+        logit(prob[i]) <- beta_pos[Pos[i]] + beta_ht * Ht_Scaled[i]
+        FGM_rep[i] ~ dbin(prob[i], FGA[i])
+    }
+    for (j in 1:max(Pos)) {
+        beta_pos[j] ~ dt(0, 0.01, 1)
+    }
+
+    beta_ht ~ dt(0, 0.16, 1)
+}

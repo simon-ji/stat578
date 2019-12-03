@@ -1,0 +1,307 @@
+---
+title: "STAT 578 - Advanced Bayesian Modeling - Fall 2019  Assignment 6"
+author: "Xiaoming Ji"
+output:
+  pdf_document: default
+---
+## Solution for Problem 1
+```{r}
+perf_data = read.csv("illinimensbb.csv", header=TRUE)
+
+plot(Ht ~ Pos, data= perf_data)
+```
+
+By checking the plot, we do see height and position are highly correlated. *center* has highest mean of height, *forward* has shortest mean of height and *forward* has in between these two. Their value ranges also don't seem to cross each other significantly.
+
+## Solution for Problem 2
+### (a)
+```{r eval=FALSE, include=TRUE}
+model {
+    for (i in 1:length(FGM)) {
+        FGM[i] ~ dbin(prob[i], FGA[i])
+        logit(prob[i]) <- beta_pos[Pos[i]] + beta_ht * Ht_Scaled[i]
+        FGM_rep[i] ~ dbin(prob[i], FGA[i])
+    }
+    for (j in 1:max(Pos)) {
+        beta_pos[j] ~ dt(0, 0.01, 1)
+    }
+
+    beta_ht ~ dt(0, 0.16, 1)
+}
+```
+
+```{r  message=FALSE, results='hide'}
+library(rjags)
+
+df_jags_1 <- list( FGM = perf_data$FGM, FGA = perf_data$FGA,
+                   Pos = unclass(perf_data$Pos),
+                   Ht_Scaled = as.vector(scale(perf_data$Ht, scale=2*sd(perf_data$Ht))))
+
+initial_vals_1 <- list(list(beta_pos = c(10,10,10), beta_ht=10),
+                       list(beta_pos = c(10,10,-10), beta_ht=-10),
+                       list(beta_pos = c(10,-10,10), beta_ht=-10),
+                       list(beta_pos = c(10,-10,-10), beta_ht=10))
+
+model_1 <- jags.model("perf_1.bug", df_jags_1, initial_vals_1, n.chains = 4, 
+                      n.adapt = 1000)
+update(model_1, 1000)
+x1 <- coda.samples(model_1, c("beta_pos","beta_ht","prob","FGM_rep"),
+                              n.iter = 1000)
+```
+```{r}
+gelman.diag(x1, autoburnin=FALSE, multivariate = FALSE)
+```
+```{r}
+coef_sample_1 <- coda.samples(model_1, c("beta_pos","beta_ht","prob","FGM_rep"),
+                              n.iter = 10000, thin = 5)
+effectiveSize(coef_sample_1[,c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "beta_ht")])
+```
+
+
+### (b)
+```{r}
+summary(coef_sample_1[, c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "beta_ht")])
+```
+
+### (c)
+
+```{r}
+par(mfrow=c(2, 2))
+
+plot(as.matrix(coef_sample_1)[,"beta_pos[1]"] ~ as.matrix(coef_sample_1)[,"beta_ht"], 
+     xlab = expression(paste(beta[H[t]])), ylab = expression(paste(beta[C])), pch='.')
+plot(as.matrix(coef_sample_1)[,"beta_pos[2]"] ~ as.matrix(coef_sample_1)[,"beta_ht"],
+     xlab = expression(paste(beta[H[t]])), ylab = expression(paste(beta[F])), pch='.')
+plot(as.matrix(coef_sample_1)[,"beta_pos[3]"] ~ as.matrix(coef_sample_1)[,"beta_ht"],
+     xlab = expression(paste(beta[H[t]])), ylab = expression(paste(beta[G])), pch='.')
+```
+
+According to the plots, $\beta_C$, $\beta_F$, $\beta_G$ are correlated with $\beta_{H_t}$.
+
+### (d)
+```{r}
+Dosunmu_index = which(perf_data$X==11)
+densplot(coef_sample_1[, paste("prob[",Dosunmu_index,"]",sep="")], main = "Density of Probability for Ayo Dosunmu")
+```
+
+### (e)
+
+Probability of $\beta_F$ > $\beta_G$,
+```{r}
+beta_F = as.matrix(coef_sample_1)[, "beta_pos[2]"]
+beta_G = as.matrix(coef_sample_1)[, "beta_pos[3]"]
+mean(beta_F > beta_G)
+```
+
+Bayes factor favoring $\beta_F$ > $\beta_G$ versus $\beta_F$ < $\beta_G$,
+
+```{r}
+mean(beta_F > beta_G) / mean(beta_F < beta_G)
+```
+
+Give the bayes factor is between 20 to 150, we can say that the data has **Strong** evidence that $\beta_F$ > $\beta_G$.
+
+### (f)
+```{r}
+probs <- as.matrix(coef_sample_1)[, paste("prob[",1:nrow(perf_data),"]", sep="")]
+FGM_rep <- as.matrix(coef_sample_1)[, paste("FGM_rep[",1:nrow(perf_data),"]", sep="")]
+
+
+Tchi <- numeric(nrow(FGM_rep))
+Tchirep <- numeric(nrow(FGM_rep))
+
+for(s in 1:nrow(FGM_rep)){
+  Tchi[s] <- sum((perf_data$FGM - perf_data$FGA * probs[s,])^2 / 
+                   (perf_data$FGA * probs[s,] * (1 - probs[s,])))
+  Tchirep[s] <- sum((FGM_rep[s,] - perf_data$FGA * probs[s,])^2 / 
+                      (perf_data$FGA * probs[s,] * (1 - probs[s,])))
+ }
+
+mean(Tchirep >= Tchi)
+```
+
+The posterior predictive p-value is suspiciously small, although not exceedingly so. Given we don't find any outliers, we conclude that there could be a bit of overdispersion.
+
+### (g)
+#### (i)
+```{r eval=FALSE, include=TRUE}
+model {
+    for (i in 1:length(FGM)) {
+        FGM[i] ~ dbin(prob[i], FGA[i])
+        logit(prob[i]) <- beta_pos[Pos[i]] + beta_ht * Ht_Scaled[i] + epsilon[i]
+        epsilon[i] ~ dnorm(0, 1 / sigma_epsilon^2)        
+        FGM_rep[i] ~ dbin(prob[i], FGA[i])
+    }
+    for (j in 1:max(Pos)) {
+        beta_pos[j] ~ dt(0, 0.01, 1)
+    }
+
+    beta_ht ~ dt(0, 0.16, 1)
+    sigma_epsilon ~ dunif(0,10)
+}
+```
+
+```{r  message=FALSE, results='hide'}
+df_jags_2 <- list( FGM = perf_data$FGM, FGA = perf_data$FGA,
+                   Pos = unclass(perf_data$Pos),
+                   Ht_Scaled = as.vector(scale(perf_data$Ht, scale=2*sd(perf_data$Ht))))
+
+initial_vals_2 <- list(list(beta_pos = c(10,10,10), beta_ht=10, sigma_epsilon = 0.01),
+                       list(beta_pos = c(10,10,-10), beta_ht=-10, sigma_epsilon = 9),
+                       list(beta_pos = c(10,-10,10), beta_ht=-10, sigma_epsilon = 0.01),
+                       list(beta_pos = c(10,-10,-10), beta_ht=10, sigma_epsilon = 9))
+
+model_2 <- jags.model("perf_2.bug", df_jags_2, initial_vals_2, n.chains = 4, 
+                      n.adapt = 1000)
+update(model_2, 1000)
+x2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", "sigma_epsilon"),
+                              n.iter = 2000)
+```
+
+```{r}
+gelman.diag(x2, autoburnin=FALSE, multivariate = FALSE)
+```
+```{r}
+coef_sample_2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", "sigma_epsilon"),
+                              n.iter = 50000)
+effectiveSize(coef_sample_2[,c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "beta_ht", "sigma_epsilon")])
+```
+#### (ii)
+```{r}
+densplot(coef_sample_2[, "sigma_epsilon"], main = expression(paste("Desity of ", sigma[epsilon])))
+```
+
+#### (iii)
+
+```{r}
+beta_F = as.matrix(coef_sample_2)[, "beta_pos[2]"]
+beta_G = as.matrix(coef_sample_2)[, "beta_pos[3]"]
+mean(beta_F > beta_G)
+```
+This posterior probability is smaller than previous model.
+
+```{r}
+mean(beta_F > beta_G) / mean(beta_F < beta_G)
+```
+This Bayes factor favoring $\beta_F$ > $\beta_G$ versus $\beta_F$ < $\beta_G$ is much smaller than previous model, and we can only say the data has **Positive** (between 3 to 30) evidence that $\beta_F$ > $\beta_G$.
+
+Also Chi-square discrepancy,
+```{r echo=FALSE}
+probs <- as.matrix(coef_sample_2)[, paste("prob[",1:nrow(perf_data),"]", sep="")]
+FGM_rep <- as.matrix(coef_sample_2)[, paste("FGM_rep[",1:nrow(perf_data),"]", sep="")]
+
+
+Tchi <- numeric(nrow(FGM_rep))
+Tchirep <- numeric(nrow(FGM_rep))
+
+for(s in 1:nrow(FGM_rep)){
+  Tchi[s] <- sum((perf_data$FGM - perf_data$FGA * probs[s,])^2 / 
+                   (perf_data$FGA * probs[s,] * (1 - probs[s,])))
+  Tchirep[s] <- sum((FGM_rep[s,] - perf_data$FGA * probs[s,])^2 / 
+                      (perf_data$FGA * probs[s,] * (1 - probs[s,])))
+ }
+
+mean(Tchirep >= Tchi)
+```
+
+Thus we says no overdispersion problems for this model.
+
+## Solution for Problem 3
+### (a)
+```{r eval=FALSE, include=TRUE}
+model {
+    for (i in 1:length(BLK)) {
+        BLK[i] ~ dpois(lambda[i])
+        log(lambda[i]) <- log_MIN[i] + beta_pos[Pos[i]] + beta_ht * Ht_Scaled[i]
+        BLK_rep[i] ~ dpois(lambda[i])
+    }
+
+    for (j in 1:max(Pos)) {
+        beta_pos[j] ~ dnorm(0, 0.0001)
+    }
+
+    beta_ht ~ dnorm(0, 0.0001)
+}
+```
+
+```{r  message=FALSE, results='hide'}
+df_jags_3 <- list( BLK = perf_data$BLK,
+                   Pos = unclass(perf_data$Pos),
+                   log_MIN = log(perf_data$MIN),
+                   Ht_Scaled = as.vector(scale(perf_data$Ht, scale=sd(perf_data$Ht))))
+
+initial_vals_3 <- list(list(beta_pos = c(100,100,100), beta_ht=100),
+                       list(beta_pos = c(100,100,-100), beta_ht=-100),
+                       list(beta_pos = c(100,-100,100), beta_ht=-100),
+                       list(beta_pos = c(100,-100,-100), beta_ht=100))
+
+model_3 <- jags.model("perf_3.bug", df_jags_3, initial_vals_3, n.chains = 4, 
+                      n.adapt = 1000)
+update(model_3, 1000)
+x3 <- coda.samples(model_3, c("beta_pos","beta_ht", "lambda","BLK_rep"),
+                              n.iter = 1000)
+```
+```{r}
+gelman.diag(x3, autoburnin=FALSE, multivariate = FALSE)
+```
+
+```{r}
+coef_sample_3 <- coda.samples(model_3, c("beta_pos","beta_ht", "lambda","BLK_rep"), 
+                              n.iter = 20000, thin = 5)
+effectiveSize(coef_sample_3[,c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "beta_ht")])
+```
+
+### (b)
+```{r}
+summary(coef_sample_3[, c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "beta_ht")])
+```
+
+### (c)
+```{r}
+beta_ht = as.matrix(coef_sample_3)[, "beta_ht"]
+quantile(exp(beta_ht), c(0.025, 0.975))
+```
+The values within 95% central posterior credible interval are all greater than 1 and thus we can conclude that greater height is associated with a higher rate of blocking shots.
+
+### (d)
+```{r}
+lambdas <- as.matrix(coef_sample_3)[, paste("lambda[",1:nrow(perf_data),"]", sep="")]
+BLK_rep <- as.matrix(coef_sample_3)[, paste("BLK_rep[",1:nrow(perf_data),"]", sep="")]
+
+Tchi <- numeric(nrow(BLK_rep))
+Tchirep <- numeric(nrow(BLK_rep))
+
+for(s in 1:nrow(BLK_rep)){
+  Tchi[s] <- sum((perf_data$BLK - lambdas[s,])^2 / lambdas[s,])
+  Tchirep[s] <- sum((BLK_rep[s,] - lambdas[s,])^2 / lambdas[s,])
+ }
+
+mean(Tchirep >= Tchi)
+```
+The posterior predictive p-value is extremely small. Thus this could could have overdispersion problem.
+
+### (e)
+#### (i)
+```{r}
+p_sample <- matrix(0, nrow = nrow(BLK_rep), ncol = nrow(perf_data))
+for(s in 1:nrow(BLK_rep)){
+  p_sample[s,] <- BLK_rep[s,] > perf_data$BLK
+}
+
+p = apply(p_sample, 2, mean)
+p_df = data.frame(name=perf_data$Player, p_value=p)
+p_df
+```
+
+#### (ii)
+```{r}
+p_df[p_df$p_value < 0.05,]
+```
+
+#### (iii)
+```{r}
+p_df[p_df$p_value > 0.95,]
+```
+
+Adonis played in center position and was 84 height. He played 225 minutes but was blocked only 1 shot. Similar to him, Samba also played in center position and was 84 height. For 86 minutes he played, 10 shots were blocked. Thus Adonis real performance is exceptional compared to our model. Thus the p-value is very high.
+
