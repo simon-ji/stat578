@@ -81,7 +81,8 @@ According to the plots, $\beta_C$, $\beta_F$, $\beta_G$ are correlated with $\be
 ### (d)
 ```{r}
 Dosunmu_index = which(perf_data$X==11)
-densplot(coef_sample_1[, paste("prob[",Dosunmu_index,"]",sep="")], main = "Density of Probability for Ayo Dosunmu")
+densplot(coef_sample_1[, paste("prob[",Dosunmu_index,"]",sep="")], 
+         main = "Density of Probability for Ayo Dosunmu")
 ```
 
 ### (e)
@@ -155,7 +156,7 @@ model_2 <- jags.model("perf_2.bug", df_jags_2, initial_vals_2, n.chains = 4,
                       n.adapt = 1000)
 update(model_2, 1000)
 x2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", "sigma_epsilon"),
-                              n.iter = 10000)
+                              n.iter = 30000)
 ```
 
 ```{r}
@@ -169,7 +170,8 @@ effectiveSize(coef_sample_2[,c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "bet
 ```
 #### (ii)
 ```{r}
-densplot(coef_sample_2[, "sigma_epsilon"], main = expression(paste("Desity of ", sigma[epsilon])))
+densplot(coef_sample_2[, "sigma_epsilon"], 
+         main = expression(paste("Desity of ", sigma[epsilon])))
 ```
 
 #### (iii)
