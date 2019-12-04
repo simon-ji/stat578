@@ -99,7 +99,7 @@ Bayes factor favoring $\beta_F$ > $\beta_G$ versus $\beta_F$ < $\beta_G$,
 mean(beta_F > beta_G) / mean(beta_F < beta_G)
 ```
 
-Give the bayes factor is between 20 to 150, we can say that the data has **Strong** evidence that $\beta_F$ > $\beta_G$.
+Given the Bayes factor is between 20 to 150, we can say that the data has **Strong** evidence that $\beta_F$ > $\beta_G$.
 
 ### (f)
 ```{r}
@@ -155,16 +155,17 @@ model_2 <- jags.model("perf_2.bug", df_jags_2, initial_vals_2, n.chains = 4,
                       n.adapt = 1000)
 update(model_2, 1000)
 x2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", "sigma_epsilon"),
-                              n.iter = 2000)
+                              n.iter = 10000)
 ```
 
 ```{r}
 gelman.diag(x2, autoburnin=FALSE, multivariate = FALSE)
 ```
 ```{r}
-coef_sample_2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", "sigma_epsilon"),
-                              n.iter = 50000)
-effectiveSize(coef_sample_2[,c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "beta_ht", "sigma_epsilon")])
+coef_sample_2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", 
+                                         "sigma_epsilon"), n.iter = 60000)
+effectiveSize(coef_sample_2[,c("beta_pos[1]", "beta_pos[2]", "beta_pos[3]", "beta_ht", 
+                               "sigma_epsilon")])
 ```
 #### (ii)
 ```{r}
@@ -239,7 +240,7 @@ model_3 <- jags.model("perf_3.bug", df_jags_3, initial_vals_3, n.chains = 4,
                       n.adapt = 1000)
 update(model_3, 1000)
 x3 <- coda.samples(model_3, c("beta_pos","beta_ht", "lambda","BLK_rep"),
-                              n.iter = 1000)
+                              n.iter = 2000)
 ```
 ```{r}
 gelman.diag(x3, autoburnin=FALSE, multivariate = FALSE)
@@ -278,12 +279,12 @@ for(s in 1:nrow(BLK_rep)){
 
 mean(Tchirep >= Tchi)
 ```
-The posterior predictive p-value is extremely small. Thus this could could have overdispersion problem.
+The posterior predictive p-value is extremely small. Thus this could indicate a problem of overdispersion.
 
 ### (e)
 #### (i)
 ```{r}
-p_sample <- matrix(0, nrow = nrow(BLK_rep), ncol = nrow(perf_data))
+p_sample <- matrix(FALSE, nrow = nrow(BLK_rep), ncol = nrow(perf_data))
 for(s in 1:nrow(BLK_rep)){
   p_sample[s,] <- BLK_rep[s,] > perf_data$BLK
 }
@@ -303,5 +304,5 @@ p_df[p_df$p_value < 0.05,]
 p_df[p_df$p_value > 0.95,]
 ```
 
-Adonis played in center position and was 84 height. He played 225 minutes but was blocked only 1 shot. Similar to him, Samba also played in center position and was 84 height. For 86 minutes he played, 10 shots were blocked. Thus Adonis real performance is exceptional compared to our model. Thus the p-value is very high.
+By looking at the original data, **Adonis** played in center position and was 84 height. He played 225 minutes but blocked only 1 shot. Samba in another hand, also played in center position and was also 84 height. For 86 minutes he played, blocked 10 shots. This makes the model always overestimate the blocks by Adonis. Thus the p-value is very high.
 
