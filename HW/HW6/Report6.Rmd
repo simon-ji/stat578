@@ -45,11 +45,12 @@ initial_vals_1 <- list(list(beta_pos = c(10,10,10), beta_ht=10),
 model_1 <- jags.model("perf_1.bug", df_jags_1, initial_vals_1, n.chains = 4, 
                       n.adapt = 1000)
 update(model_1, 1000)
-x1 <- coda.samples(model_1, c("beta_pos","beta_ht","prob","FGM_rep"),
-                              n.iter = 1000)
+
+#Need only check top-level parameters (in the DAG) for convergence.
+x1 <- coda.samples(model_1, c("beta_pos","beta_ht"), n.iter = 2000)
 ```
 ```{r}
-gelman.diag(x1, autoburnin=FALSE, multivariate = FALSE)
+gelman.diag(x1, autoburnin=FALSE)
 ```
 ```{r}
 coef_sample_1 <- coda.samples(model_1, c("beta_pos","beta_ht","prob","FGM_rep"),
@@ -121,7 +122,7 @@ for(s in 1:nrow(FGM_rep)){
 mean(Tchirep >= Tchi)
 ```
 
-The posterior predictive p-value is suspiciously small, although not exceedingly so. Given we don't find any outliers, we conclude that there could be a bit of overdispersion.
+The posterior predictive p-value is small, although not exceedingly so. Given we don't find any outliers, we conclude that there is a problem of overdispersion.
 
 ### (g)
 #### (i)
@@ -155,12 +156,11 @@ initial_vals_2 <- list(list(beta_pos = c(10,10,10), beta_ht=10, sigma_epsilon = 
 model_2 <- jags.model("perf_2.bug", df_jags_2, initial_vals_2, n.chains = 4, 
                       n.adapt = 1000)
 update(model_2, 1000)
-x2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", "sigma_epsilon"),
-                              n.iter = 30000)
+x2 <- coda.samples(model_2, c("beta_pos","beta_ht", "sigma_epsilon"), n.iter = 10000)
 ```
 
 ```{r}
-gelman.diag(x2, autoburnin=FALSE, multivariate = FALSE)
+gelman.diag(x2, autoburnin=FALSE)
 ```
 ```{r}
 coef_sample_2 <- coda.samples(model_2, c("beta_pos","beta_ht","prob","FGM_rep", 
@@ -241,11 +241,10 @@ initial_vals_3 <- list(list(beta_pos = c(100,100,100), beta_ht=100),
 model_3 <- jags.model("perf_3.bug", df_jags_3, initial_vals_3, n.chains = 4, 
                       n.adapt = 1000)
 update(model_3, 1000)
-x3 <- coda.samples(model_3, c("beta_pos","beta_ht", "lambda","BLK_rep"),
-                              n.iter = 2000)
+x3 <- coda.samples(model_3, c("beta_pos","beta_ht"), n.iter = 2000)
 ```
 ```{r}
-gelman.diag(x3, autoburnin=FALSE, multivariate = FALSE)
+gelman.diag(x3, autoburnin=FALSE)
 ```
 
 ```{r}
