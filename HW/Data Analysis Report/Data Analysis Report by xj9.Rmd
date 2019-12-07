@@ -6,13 +6,22 @@ output:
 ---
 ## Introduction
 
-Marijuana (fromally cannabis) is a psychoactive drug from the Cannabis plant used for medical or recreational purposes. The immediate desired effects from consuming cannabis include relaxation and euphoria (the "high" or "stoned" feeling), a general change in perception, heightened mood, and an increase in appetite. Due to this characteristic, it is the most widely used illegal drugs in the world.  In 2013, between 128 and 232 million people used Marijuana (2.7% to 4.9% of the global population between the ages of 15 and 65). The short-term side effects by Marijuana  may include a decrease in short-term memory, impaired motor skills, red eyes, and feelings of paranoia or anxiety. Long-term side effects may include addiction, decreased mental ability in those who started regular use as teenagers, and behavioral problems in children whose mothers used marijuana during pregnancy. Due to this reason,  the possession, use, and cultivation of cannabis is illegal in most countries of the world. [^1]
+Marijuana (fromally cannabis) is a psychoactive drug from the Cannabis plant used for medical or recreational purposes. The immediate desired effects from consuming arijuana include relaxation and euphoria (the "high" or "stoned" feeling), a general change in perception, heightened mood, and an increase in appetite. Due to this characteristic, it is the most widely used illegal drugs in the world.  In 2013, between 128 and 232 million people used Marijuana (2.7% to 4.9% of the global population between the ages of 15 and 65). The short-term side effects by Marijuana  may include a decrease in short-term memory, impaired motor skills, red eyes, and feelings of paranoia or anxiety. Long-term side effects may include addiction, decreased mental ability in those who started regular use as teenagers, and behavioral problems in children whose mothers used marijuana during pregnancy. Due to this reason,  the possession, use, and cultivation of cannabis is illegal in most countries of the world. [^1]
 
+Marijuana use hurts brain functioning in adolescents, this is added concern because adolescence is an important time in development brains by building the connections to improve executive functioning. In addition, research found adolescents who begin using marijuana before age 18 are 4 to 7 times more likely than adults to develop a marijuana use addiction. [^2]
 
-Marijuana, like some other brain-altering substances. [^2]
+A survey conducted in 2016 on adolescents' marijuana usage for at least once in the past month reported the following percentage,
+
+- 5% of students in 8th grade
+- 14% of students in 10th grade
+- 23% of students in 12th grade
+- 22% of college students and young adults
+
+From 2007 to 2017, marijuana use among adolescents has increased in the past 10 years for students in 12th grade. [^3]
 
 [^1]: Based on content from WikiPedia, https://en.wikipedia.org/wiki/Cannabis_(drug) 
-[^2]: Based on content from U.S. Department of Health & Human Services,  https://www.hhs.gov/ash/oah/adolescent-development/substance-use/marijuana/index.html
+[^2]: Based on content from U.S. Department of Health & Human Services, https://www.hhs.gov/ash/oah/adolescent-development/substance-use/marijuana/risks/index.html
+[^3]: Based on content from U.S. Department of Health & Human Services,  https://www.hhs.gov/ash/oah/adolescent-development/substance-use/marijuana/index.html
 
 ## Data
 ## First Model

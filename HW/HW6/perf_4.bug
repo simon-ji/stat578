@@ -1,0 +1,14 @@
+model {
+    for (i in 1:length(BLK)) {
+        lambda[i] <- MIN[i] * r[i]
+        BLK[i] ~ dpois(lambda[i])
+        log(r[i]) <- beta_pos[Pos[i]] + beta_ht * Ht_Scaled[i]        
+        BLK_rep[i] ~ dpois(lambda[i])
+    }
+
+    for (j in 1:max(Pos)) {
+        beta_pos[j] ~ dnorm(0, 0.0001)
+    }
+
+    beta_ht ~ dnorm(0, 0.0001)
+}
