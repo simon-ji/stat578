@@ -156,7 +156,7 @@ initial_vals_2 <- list(list(beta_pos = c(10,10,10), beta_ht=10, sigma_epsilon = 
 model_2 <- jags.model("perf_2.bug", df_jags_2, initial_vals_2, n.chains = 4, 
                       n.adapt = 1000)
 update(model_2, 1000)
-x2 <- coda.samples(model_2, c("beta_pos","beta_ht", "sigma_epsilon"), n.iter = 10000)
+x2 <- coda.samples(model_2, c("beta_pos","beta_ht", "sigma_epsilon"), n.iter = 20000)
 ```
 
 ```{r}
@@ -305,5 +305,5 @@ p_df[p_df$p_value < 0.05,]
 p_df[p_df$p_value == 1,]
 ```
 
-By looking at the original data, **Adonis** played in center position and was 84 height. He played 225 minutes but blocked only 1 shot. Samba in another hand, also played in center position and was also 84 height. For 86 minutes he played, blocked 10 shots. This makes the model always overestimate the blocks by Adonis. Thus the p-value is very high.
+By looking at the data, these players all got 0 shot blocks, since the $y^{rep}_i$ can't be lower than 0, thus it must be greater or equal to $y_i$.
 
