@@ -287,7 +287,7 @@ The posterior predictive p-value is extremely small. Thus this could indicate a 
 ```{r}
 p_sample <- matrix(FALSE, nrow = nrow(BLK_rep), ncol = nrow(perf_data))
 for(s in 1:nrow(BLK_rep)){
-  p_sample[s,] <- BLK_rep[s,] > perf_data$BLK
+  p_sample[s,] <- BLK_rep[s,] >= perf_data$BLK
 }
 
 p = apply(p_sample, 2, mean)
@@ -302,7 +302,7 @@ p_df[p_df$p_value < 0.05,]
 
 #### (iii)
 ```{r}
-p_df[p_df$p_value > 0.95,]
+p_df[p_df$p_value == 1,]
 ```
 
 By looking at the original data, **Adonis** played in center position and was 84 height. He played 225 minutes but blocked only 1 shot. Samba in another hand, also played in center position and was also 84 height. For 86 minutes he played, blocked 10 shots. This makes the model always overestimate the blocks by Adonis. Thus the p-value is very high.
