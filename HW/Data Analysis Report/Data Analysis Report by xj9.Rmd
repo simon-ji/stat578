@@ -24,6 +24,37 @@ From 2007 to 2017, marijuana use among adolescents has increased in the past 10 
 [^3]: Based on content from U.S. Department of Health & Human Services,  https://www.hhs.gov/ash/oah/adolescent-development/substance-use/marijuana/index.html
 
 ## Data
+The data has 116 records for male and 120 records for female. We see the obviously trend of use increse from 1976 to 1980. Male has more percentage of use than female for every year.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+marijuana_data = read.csv("marijuanause.csv", header=TRUE)
+
+year = seq(as.Date("1976-01-01"), as.Date("1980-01-10"), by="1 year")
+plot(apply(marijuana_data[,-1], 2, mean) ~ year, type = "b", col="blue", ylim=c(0, 1), xlab="Year", ylab="Percentage of Use for Male")
+
+# nrow(marijuana_data[marijuana_data$female==1,])/nrow(marijuana_data)
+marijuana_data_male = marijuana_data[marijuana_data$female==0,-1]
+# nrow(marijuana_data_male)
+marijuana_data_female = marijuana_data[marijuana_data$female==1,-1]
+# nrow(marijuana_data_female)
+```
+```{r echo=FALSE}
+par(mfrow=c(1,2))
+plot(apply(marijuana_data_male, 2, mean) ~ year, type = "b", col="blue", ylim=c(0, 1), xlab="Year", ylab="Percentage of Use for Male")
+
+plot(apply(marijuana_data_female, 2, mean) ~ year, type = "b", col="blue", ylim=c(0, 1), xlab="Year", ylab="Percentage of Use for Female")
+```
+
+The frequency of use during this time frame,
+```{r echo=FALSE}
+freq = round(table(apply(marijuana_data[, -1], 1, sum)) / nrow(marijuana_data), 2)
+```
+|     |  0|   1|  2|   3|  4|   5|
+|:----|--:|---:|--:|---:|--:|---:|
+|Use Percentage |  `r freq[1]`|`r freq[2]`|`r freq[3]`|`r freq[4]`|`r freq[5]`|`r freq[6]`|
+
+Only 47% of adolescents didn't use marijuana during this time frame.
+
 ## First Model
 ## Second Model
 ## Conclusions
