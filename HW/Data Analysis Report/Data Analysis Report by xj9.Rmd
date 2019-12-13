@@ -29,14 +29,15 @@ The data has 116 records for male and 120 records for female. We see the obvious
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 marijuana_data = read.csv("marijuanause.csv", header=TRUE)
 
-year = seq(as.Date("1976-01-01"), as.Date("1980-01-10"), by="1 year")
+year = seq(1976, 1980)
+
 plot(apply(marijuana_data[,-1], 2, mean) ~ year, type = "b", col="blue", ylim=c(0, 1), xlab="Year", ylab="Percentage of Use for Male")
 
-# nrow(marijuana_data[marijuana_data$female==1,])/nrow(marijuana_data)
 marijuana_data_male = marijuana_data[marijuana_data$female==0,-1]
-# nrow(marijuana_data_male)
 marijuana_data_female = marijuana_data[marijuana_data$female==1,-1]
-# nrow(marijuana_data_female)
+
+male_count = nrow(marijuana_data_male)
+female_count = nrow(marijuana_data_female)
 ```
 ```{r echo=FALSE}
 par(mfrow=c(1,2))
@@ -56,7 +57,153 @@ freq = round(table(apply(marijuana_data[, -1], 1, sum)) / nrow(marijuana_data), 
 Only 47% of adolescents didn't use marijuana during this time frame.
 
 ## First Model
+
+$use_{ij}|\beta, X_{ij} \sim indep. Bernoulli(p_{ij})$
+$logit(p_{ij}) = X_i\beta = \beta_0 + \beta_female * female_{ij} + \beta_year * year_{ij}$
+
+- $use_{ij}$ is the response variable by a person (i) and year (j). 1 if marijuana was used, 0 if not.
+- $X_{ij}$ consists of female and year which and they are all by a person (i) and year (j).
+- $p_{ij}$ is the probability by person and by year.
+- $\beta_0$ is intercept, $\beta_female$ is coefficient for female, $\beta_year$ is coefficient for year.
+
+
+
+
+### (b)
+```{r echo=FALSE}
+library(rjags)
+
+df_jags_1 <- list( female_centered = as.vector(scale(marijuana_data$female, center = TRUE, scale = FALSE)),
+                   year_scaled = as.vector(scale(year, scale=2*sd(year))),
+                   drug_use = marijuana_data[, 2:6],
+                   female_const_centered = 1 - mean(marijuana_data$female),
+                   male_const_centered = 0 - 1 - mean(marijuana_data$female))
+
+initial_vals_1 <- list(list(beta_0 = 10,  beta_female = 10, beta_year = 10),
+                       list(beta_0 = 10,  beta_female = -10, beta_year = 10),
+                       list(beta_0 = 10,  beta_female = 10, beta_year = -10),
+                       list(beta_0 = -10,  beta_female = -10, beta_year = -10))
+
+model_1 <- jags.model("drug_1.bug", df_jags_1, initial_vals_1, n.chains = 4, 
+                      n.adapt = 1000)
+update(model_1, 1000)
+```
+
+```{r}
+x1 <- coda.samples(model_1, c("beta_0","beta_female","beta_year"), n.iter = 1000)
+gelman.diag(x1, autoburnin=FALSE)
+```
+The Gelman-Rubin statistics for parameters are all smaller than 1.1.
+
+```{r}
+plot(x1)
+```
+The plots also indicate the convergence of the chains for these parameters 
+
+```{r}
+coef_sample_1 <- coda.samples(model_1, c("beta_0","beta_female","beta_year","drug_use_female_rep",
+                                         "drug_use_male_rep"), n.iter = 2000)
+effectiveSize(coef_sample_1[,c("beta_0","beta_female","beta_year")])
+```
+Effective sample size for these parameters are greater than 4000.
+
+### (c)
+
+```{r}
+summary(coef_sample_1[,c("beta_0","beta_female","beta_year")])
+```
+
+- beta_female is less than 0, means female has less probability to use drug. 
+- beta_year is greater than 0, means the drug use would increase as year increases.
+
+### (d)
+
+```{r}
+beta_0_sample = as.matrix(coef_sample_1)[, "beta_0"]
+beta_female_sample = as.matrix(coef_sample_1)[, "beta_female"]
+beta_year = as.matrix(coef_sample_1)[, "beta_year"]
+
+mean(beta_female)
+```
+
+This means, for a given year, females are **less** likely to use marijuana than males.
+
+### (e)
+```{r}
+female_drug_use_sample = as.matrix(coef_sample_1)[, paste("drug_use_female_rep[",1:length(year),"]",sep="")]
+male_drug_use_sample = as.matrix(coef_sample_1)[, paste("drug_use_male_rep[",1:length(year),"]",sep="")]
+
+par(mfrow=c(1,2))
+plot(apply(male_drug_use_sample, 2, mean) ~ year, type = "b", col="blue", ylim=c(0, 1), xlab="Year", ylab="Posterior Expected Probability by Male")
+
+plot(apply(female_drug_use_sample, 2, mean) ~ year, type = "b", col="blue", ylim=c(0, 1), xlab="Year", ylab="Posterior Expected Probability by Female")
+```
+
+### (f)
+```{r}
+dic.samples(model_1, 100000)
+```
+The effective number of parameters is very close to the the actual number of parameters: 3.
+
 ## Second Model
+Now we extend our first model by allowing each person to have a separate additive random effect.
+
+### (b)
+```{r echo=FALSE}
+library(runjags)
+
+df_jags_2 <- list( female_centered = as.vector(scale(marijuana_data$female, center = TRUE, scale = FALSE)),
+                   year_scaled = as.vector(scale(year, scale=2*sd(year))),
+                   drug_use = as.matrix(marijuana_data[, 2:6]))
+
+# initial_vals_2 <- list(list(beta_0 = 10,  beta_female = 10, beta_year = 10, sigma_epsilon = 9),
+#                        list(beta_0 = 10,  beta_female = -10, beta_year = 10, sigma_epsilon = 0.01),
+#                        list(beta_0 = -10,  beta_female = 10, beta_year = -10, sigma_epsilon = 9),
+#                        list(beta_0 = -10,  beta_female = -10, beta_year = -10, sigma_epsilon = 0.01))
+
+# model_2 <- autorun.jags(model = "drug_2.bug", 
+#                         monitor =  c("beta_0","beta_female","beta_year", "sigma_epsilon"),
+#                         data = df_jags_2, inits = initial_vals_2, n.chains = 4)
+
+
+initial_vals_2 <- list(list(beta_0 = 4,  beta_female = 4, beta_year = 4, sigma_epsilon = 4),
+                      list(beta_0 = 4,  beta_female = -4, beta_year = 4, sigma_epsilon = 2),
+                      list(beta_0 = -4,  beta_female = 4, beta_year = -4, sigma_epsilon = 4),
+                      list(beta_0 = -4,  beta_female = -4, beta_year = -4, sigma_epsilon = 2))
+
+model_2 <- jags.model("drug_2.bug", df_jags_2, initial_vals_2, n.chains = 4)
+update(model_2, 4000)
+```
+
+```{r}
+x2 <- coda.samples(model_2, c("beta_0","beta_female","beta_year", "sigma_epsilon"), n.iter = 10000)
+gelman.diag(x2, autoburnin=FALSE)
+```
+
+```{r}
+plot(x2)
+```
+
+```{r}
+coef_sample_2 <- coda.samples(model_2, c("beta_0","beta_female","beta_year", "sigma_epsilon",
+                                         "drug_use_rep"), n.iter = 30000)
+effectiveSize(coef_sample_2[,c("beta_0","beta_female","beta_year", "sigma_epsilon")])
+```
+
+### (c)
+
+```{r}
+summary(coef_sample_2[, c("beta_0","beta_female","beta_year", "sigma_epsilon")])
+```
+
+### (d)
+```{r}
+dic.samples(model_2, 100000)
+```
+
+DIC score is 841.9 and is lower than the first model. The effective number of parameters is 167.8 while the actual number of parameters is 239.
+
 ## Conclusions
-## Appendix
-## Footnotes
+## Appendix 1 - R Code for data analysis
+## Appendix 2 - R Code for model 1
+## Appendix 3 - R Code for model 2
