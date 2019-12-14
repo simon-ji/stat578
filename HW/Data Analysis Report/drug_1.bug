@@ -2,8 +2,8 @@ model {
     for (i in 1:length(female_centered)) {
         for(j in 1:length(year_scaled)) {
             drug_use[i,j] ~ dbern(prob[i,j])
-            logit(prob[i,j]) <- beta_0 + beta_female * female_centered[i] + beta_year * year_scaled[j]
-            drug_use_rep[i,j] ~ dbern(prob[i,j])
+            logit(prob[i,j]) <- beta_0 + beta_female * female_centered[i] + 
+                                beta_year * year_scaled[j]
         }
     }
 
@@ -13,10 +13,12 @@ model {
     
     #Build posterior replication for female and male
     for(j in 1:length(year_scaled)){
-        logit(prob_female_rep[j]) <- beta_0 + beta_female * female_const_centered + beta_year * year_scaled[j]
+        logit(prob_female_rep[j]) <- beta_0 + beta_female * female_const_centered + 
+                                      beta_year * year_scaled[j]
         drug_use_female_rep[j] ~ dbern(prob_female_rep[j])
 
-        logit(prob_male_rep[j]) <- beta_0 + beta_female * male_const_centered + beta_year * year_scaled[j]
+        logit(prob_male_rep[j]) <- beta_0 + beta_female * male_const_centered + 
+                                      beta_year * year_scaled[j]
         drug_use_male_rep[j] ~ dbern(prob_male_rep[j])        
     }
 }

@@ -110,7 +110,8 @@ Effective sample size for these parameters are greater than 4000.
 ### (c)
 
 ```{r}
-summary(coef_sample_1[,c("beta_0","beta_female","beta_year")])
+s_1 = summary(coef_sample_1[,c("beta_0","beta_female","beta_year")])
+s_1
 ```
 
 - beta_female is less than 0, means female has less probability to use drug. 
@@ -123,7 +124,8 @@ beta_0_sample = as.matrix(coef_sample_1)[, "beta_0"]
 beta_female_sample = as.matrix(coef_sample_1)[, "beta_female"]
 beta_year = as.matrix(coef_sample_1)[, "beta_year"]
 
-mean(beta_female)
+beta_female_mean = mean(beta_female_sample)
+beta_female_mean
 ```
 
 This means, for a given year, females are **less** likely to use marijuana than males.
@@ -141,7 +143,8 @@ plot(apply(female_drug_use_sample, 2, mean) ~ year, type = "b", col="blue", ylim
 
 ### (f)
 ```{r}
-dic.samples(model_1, 100000)
+dic_1 = dic.samples(model_1, 100000)
+dic_1
 ```
 The effective number of parameters is very close to the the actual number of parameters: 3.
 
@@ -166,17 +169,18 @@ df_jags_2 <- list( female_centered = as.vector(scale(marijuana_data$female, cent
 #                         data = df_jags_2, inits = initial_vals_2, n.chains = 4)
 
 
-initial_vals_2 <- list(list(beta_0 = 4,  beta_female = 4, beta_year = 4, sigma_epsilon = 4),
-                      list(beta_0 = 4,  beta_female = -4, beta_year = 4, sigma_epsilon = 2),
-                      list(beta_0 = -4,  beta_female = 4, beta_year = -4, sigma_epsilon = 4),
-                      list(beta_0 = -4,  beta_female = -4, beta_year = -4, sigma_epsilon = 2))
+initial_vals_2 <- list(list(beta_0 = 4,  beta_female = 4, beta_year = 4, sigma_person = 4),
+                      list(beta_0 = 4,  beta_female = -4, beta_year = 4, sigma_person = 2),
+                      list(beta_0 = -4,  beta_female = 4, beta_year = -4, sigma_person = 4),
+                      list(beta_0 = -4,  beta_female = -4, beta_year = -4, sigma_person = 2))
 
-model_2 <- jags.model("drug_2.bug", df_jags_2, initial_vals_2, n.chains = 4)
+model_2 <- jags.model("drug_2.bug", df_jags_2, initial_vals_2, n.chains = 4,
+                      n.adapt = 1000)
 update(model_2, 4000)
 ```
 
 ```{r}
-x2 <- coda.samples(model_2, c("beta_0","beta_female","beta_year", "sigma_epsilon"), n.iter = 10000)
+x2 <- coda.samples(model_2, c("beta_0","beta_female","beta_year", "sigma_person"), n.iter = 10000)
 gelman.diag(x2, autoburnin=FALSE)
 ```
 
@@ -185,23 +189,38 @@ plot(x2)
 ```
 
 ```{r}
-coef_sample_2 <- coda.samples(model_2, c("beta_0","beta_female","beta_year", "sigma_epsilon",
+coef_sample_2 <- coda.samples(model_2, c("beta_0","beta_female","beta_year", "sigma_person",
                                          "drug_use_rep"), n.iter = 30000)
-effectiveSize(coef_sample_2[,c("beta_0","beta_female","beta_year", "sigma_epsilon")])
+effectiveSize(coef_sample_2[,c("beta_0","beta_female","beta_year", "sigma_person")])
 ```
 
 ### (c)
 
 ```{r}
-summary(coef_sample_2[, c("beta_0","beta_female","beta_year", "sigma_epsilon")])
+summary_2 = summary(coef_sample_2[, c("beta_0","beta_female","beta_year", "sigma_person")])
+summary_2
 ```
 
 ### (d)
 ```{r}
-dic.samples(model_2, 100000)
+dic_2 = dic.samples(model_2, 100000)
+dic_2
 ```
 
 DIC score is 841.9 and is lower than the first model. The effective number of parameters is 167.8 while the actual number of parameters is 239.
+
+
+```{r}
+saveRDS(model_1, file ="model_1.rds")
+saveRDS(x1, file ="x1.rds")
+saveRDS(coef_sample_1, file ="coef_sample_1.rds")
+saveRDS(dic_1, file ="dic_1.rds")
+
+saveRDS(model_2, file ="model_2.rds")
+saveRDS(x2, file ="x2.rds")
+saveRDS(coef_sample_2, file ="coef_sample_2.rds")
+saveRDS(dic_2, file ="dic_2.rds")
+```
 
 ## Conclusions
 ## Appendix 1 - R Code for data analysis

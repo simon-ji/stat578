@@ -2,14 +2,15 @@ model {
     for (i in 1:length(female_centered)) {
         for(j in 1:length(year_scaled)) {
             drug_use[i, j] ~ dbern(prob[i, j])
-            logit(prob[i, j]) <- beta_0 + beta_female * female_centered[i] + beta_year * year_scaled[j] + epsilon[i]
+            logit(prob[i, j]) <- beta_0 + beta_female * female_centered[i] + 
+                                    beta_year * year_scaled[j] + epsilon[i]
             drug_use_rep[i, j] ~ dbern(prob[i, j])
         }
-        epsilon[i] ~ dnorm(0, 1 / sigma_epsilon^2)
+        epsilon[i] ~ dnorm(0, 1 / sigma_person^2)
     }
 
     beta_0 ~ dt(0, 0.01, 1)
     beta_female ~ dt(0, 0.16, 1)
     beta_year ~ dt(0, 0.16, 1)
-    sigma_epsilon ~ dunif(0,10)
+    sigma_person ~ dunif(0,10)
 }
